@@ -1,0 +1,319 @@
+:root {
+  --bg: #0f1720;
+  --card-bg: #20242a;
+  --border-subtle: rgba(255,255,255,0.04);
+  --text-main: #e6eef8;
+  --text-muted: #9aa6b2;
+  --accent: #0a84ff;
+  --accent-soft: rgba(10, 132, 255, 0.14);
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --transition-fast: 150ms ease-out;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at top left, rgba(18,20,26,0.9), var(--bg) 55%);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Centered app card */
+
+#app {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#app > section {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: 18px 18px 16px;
+  margin-bottom: 14px;
+}
+
+/* Titles & text */
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Drop zone styling (dark theme) */
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
+  border-radius: 18px;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+  border: 1px dashed rgba(255,255,255,0.04);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.drop-zone.dragover {
+  box-shadow: 0 12px 40px rgba(10,132,255,0.12);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.drop-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.drop-icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent), #0066d6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(10,132,255,0.18);
+}
+
+.drop-copy h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.drop-copy p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.drop-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+
+.shortcut-hint kbd {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-main);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* File selector section */
+
+#choose-file-btn {
+  margin-bottom: 8px;
+}
+
+#selected-file-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  word-break: break-all;
+  margin-top: 10px;
+}
+
+/* Buttons */
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 8px 18px;
+  border: 1px solid transparent;
+  background: #ffffff;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: rgba(10, 132, 255, 0.4);
+  transform: translateY(-0.5px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.0);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Primary start button */
+
+#start-btn {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  margin-right: 8px;
+}
+
+#start-btn:hover:not(:disabled) {
+  background: #0b78e6;
+  border-color: #0b78e6;
+  box-shadow: 0 6px 16px rgba(15, 118, 255, 0.35);
+}
+
+#start-btn:active:not(:disabled) {
+  box-shadow: 0 3px 10px rgba(15, 118, 255, 0.25);
+}
+
+/* Radio group */
+
+section label {
+  font-size: 13px;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
+/* Select + numeric inputs */
+
+input[type="number"],
+input[type="text"] {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.02);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-main);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+  appearance: none;
+}
+
+
+/* Parameter grid alignment */
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr;   /* one item per row */
+  align-items: center;
+}
+
+
+.control-grid .control {
+  margin: 0;
+}
+
+.control-grid input[type="number"],
+.control-grid input[type="text"] {
+  width: 72px;             /* narrower */
+  min-width: 64px;
+  max-width: 100px;
+  padding: 4px 6px;        /* was 8px 10px → much slimmer */
+  font-size: 12px;         /* slightly smaller */
+  border-radius: 6px;      /* less pill-like */
+  text-align: center;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.radio-group {
+  margin-bottom: 10px;
+}
+
+/* Status area */
+
+#status {
+  margin-top: 10px;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  font-size: 12px;
+  line-height: 1.4;
+  max-height: 140px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+/* Responsive tweaks */
+
+@media (max-width: 600px) {
+  #app {
+    padding: 24px 10px;
+  }
+
+  #app > section {
+    padding: 16px 14px 14px;
+  }
+}

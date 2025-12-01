@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+  <main id="app">
+
+    <section class="card drop-card">
+      <div id="file-drop-zone" class="drop-zone" role="button" tabindex="0">
+        <div class="drop-inner">
+          <div class="drop-icon-circle" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v14" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9l7-7 7 7" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="drop-copy">
+            <h2>Drop Files Here</h2>
+            <p>or click to browse</p>
+          </div>
+        </div>
+
+        <input id="file-input" type="file" style="display:none" accept="audio/*,video/*,audio/mpeg,video/mp4,.m4a,.flac,.wav,.aac,.ogg,.mov,.mkv" />
+      </div>
+      <p id="selected-file-label" class="file-label">No file selected</p>
+    </section>
+
+    <section class="card controls-card">
+      <div class="control-group">
+        <h2>Output format</h2>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="output-format" value="srt" checked />
+            .srt
+          </label>
+          <label>
+            <input type="radio" name="output-format" value="txt" />
+            .txt
+          </label>
+          <label>
+            <input type="radio" name="output-format" value="both" />
+            both
+          </label>
+        </div>
+      </div>
+      <div class="control-grid">
+        <label class="control">
+          <span class="control-label">Model</span>
+          <select id="model-select">
+            <option value="tiny">tiny</option>
+            <option value="base" selected>base</option>
+            <option value="small">small</option>
+            <option value="medium">medium</option>
+            <option value="large">large</option>
+          </select>
+        </label>
+        <label class="control">
+          <span class="control-label">Max segment length (seconds)</span>
+          <input
+            type="number"
+            id="max-segment-length"
+            min="1"
+            max="30"
+            value="8"
+          />
+        </label>
+        <label class="control">
+          <span class="control-label">Max characters per segment</span>
+          <input
+            type="number"
+            id="max-char-limit"
+            min="10"
+            max="200"
+            value="30"
+          />
+        </label>
+      </div>
+    </section>
+
+    <section class="card actions-card">
+      <div class="actions">
+        <button id="start-btn" disabled>Convert</button>
+        <pre id="status"></pre>
+      </div>
+    </section>
+  </main>
+</body>
