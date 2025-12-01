@@ -4,6 +4,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { DragDropEvent } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 
+
 type OutputFormat = "srt" | "txt" | "both";
 
 interface TranscriptionRequest {
@@ -115,6 +116,35 @@ async function chooseFile(labelEl: HTMLElement | null, startBtn: HTMLButtonEleme
 
   if (startBtn) {
     startBtn.disabled = !selectedFilePath;
+  }
+}
+
+async function runTranscription(request: TranscriptionRequest, statusEl: HTMLElement | null) {
+  const modelPath = request.model;
+  const wavPath = request.filePath;
+  const outputFormat = request.outputFormat; // "srt" | "txt" | "both"
+  const maxSegmentLength = request.maxSegmentLength;
+  const maxCharactersPerSegment = request.maxCharactersPerSegment;
+
+  try {
+    const transcript = await invoke<string>("transcribe_command", {
+      modelPath,
+      wavPath,
+      outputFormat,
+      maxSegmentLength,
+      maxCharactersPerSegment,
+    });
+    console.log("Transcript:", transcript);
+    // update state/UI with transcript
+
+    if (statusEl) {
+      statusEl.textContent = [
+        "Parameters sent to backend (check Rust console):",
+        JSON.stringify(request, null, 2),
+      ].join("\n");
+    }
+  } catch (e) {
+    console.error("Transcription error:", e);
   }
 }
 
@@ -249,7 +279,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      await sendParameters(request, statusEl);
+      await runTranscription(request, statusEl);
     } catch (error) {
       console.error("Failed to reach backend:", error);
       if (statusEl) {
