@@ -148,19 +148,13 @@ async function runTranscription(request: TranscriptionRequest, statusEl: HTMLEle
   }
 }
 
-async function sendParameters(request: TranscriptionRequest, statusEl: HTMLElement | null) {
-  if (statusEl) {
-    statusEl.textContent = "Sending parameters to backend...";
-  }
+// Define allowed extensions
+const allowedExtensions = ["mp3", "wav", "m4a", "flac", "aac", "ogg", "mp4", "mov", "mkv"];
 
-  await invoke("log_transcription_parameters", { request });
-
-  if (statusEl) {
-    statusEl.textContent = [
-      "Parameters sent to backend (check Rust console):",
-      JSON.stringify(request, null, 2),
-    ].join("\n");
-  }
+// Helper function to validate file extension
+function isValidFileExtension(filePath: string): boolean {
+  const extension = filePath.split(".").pop()?.toLowerCase();
+  return extension ? allowedExtensions.includes(extension) : false;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -178,7 +172,13 @@ window.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = defaultStatusText;
   }
 
+  // Update setSelectedFile to validate files
   function setSelectedFile(path: string | null) {
+    if (path && !isValidFileExtension(path)) {
+      alert("Invalid file type. Please select an audio or video file.");
+      return;
+    }
+
     selectedFilePath = path;
     if (selectedFileLabel) {
       selectedFileLabel.textContent = path ?? "No file selected";
@@ -225,7 +225,6 @@ window.addEventListener("DOMContentLoaded", () => {
       dropZone.classList.remove("dragover");
       const dt = (e as DragEvent).dataTransfer;
       if (!dt) return;
-      // Prefer full path from DataTransfer.files (available in Tauri)
       const file = dt.files?.[0];
       if (file) {
         // @ts-ignore
@@ -233,7 +232,6 @@ window.addEventListener("DOMContentLoaded", () => {
         setSelectedFile(p);
         return;
       }
-      // Fallback: try to read text/plain data (e.g., some apps)
       const text = dt.getData("text");
       if (text) {
         setSelectedFile(text);

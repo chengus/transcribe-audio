@@ -42,7 +42,8 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 16px;
 }
 
 #app > section {
@@ -71,6 +72,7 @@ p {
 }
 
 /* Drop zone styling (dark theme) */
+
 .drop-zone {
   display: flex;
   flex-direction: column;
