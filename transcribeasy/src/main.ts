@@ -1,6 +1,8 @@
 import "./styles.css";
 import { invoke } from "@tauri-apps/api/core";
-import { open } from '@tauri-apps/plugin-dialog';
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import type { DragDropEvent } from "@tauri-apps/api/webview";
+import { open } from "@tauri-apps/plugin-dialog";
 
 type OutputFormat = "srt" | "txt" | "both";
 
@@ -14,6 +16,61 @@ interface TranscriptionRequest {
 
 const defaultStatusText = "Choose a file to begin.";
 let selectedFilePath: string | null = null;
+
+function isTauriEnvironment() {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
+async function registerNativeDropHandlers(
+  dropZone: HTMLElement | null,
+  setSelectedFile: (path: string) => void
+) {
+  if (!dropZone || !isTauriEnvironment()) {
+    return;
+  }
+
+  try {
+    const unlisten = await WebviewWindow.getCurrent().onDragDropEvent((event) => {
+      forwardDragDropToUi(dropZone, setSelectedFile, event);
+    });
+    window.addEventListener(
+      "beforeunload",
+      () => {
+        unlisten();
+      },
+      { once: true }
+    );
+  } catch (error) {
+    console.warn("Failed to register native file drop handlers", error);
+  }
+}
+
+function forwardDragDropToUi(
+  dropZone: HTMLElement,
+  setSelectedFile: (path: string) => void,
+  event: { payload: DragDropEvent }
+) {
+  const { payload } = event;
+  switch (payload.type) {
+    case "enter":
+    case "over":
+      dropZone.classList.add("dragover");
+      break;
+    case "leave":
+      dropZone.classList.remove("dragover");
+      break;
+    case "drop": {
+      dropZone.classList.remove("dragover");
+      const [firstPath] = payload.paths ?? [];
+      if (firstPath) {
+        setSelectedFile(firstPath);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
 
 function queryElement<T extends HTMLElement>(selector: string) {
   return document.querySelector<T>(selector);
@@ -158,6 +215,9 @@ window.addEventListener("DOMContentLoaded", () => {
       void chooseFile(selectedFileLabel, startBtn);
     });
   }
+  void registerNativeDropHandlers(dropZone, (path) => {
+    setSelectedFile(path);
+  });
 
   // Prevent default dragover/drop on window so drop events reach the drop zone reliably
   window.addEventListener("dragover", (e) => {
