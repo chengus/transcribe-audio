@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "transcribeasy",
+  "productName": "TranscribEasy",
   "version": "0.1.0",
   "identifier": "com.lucentlu.transcribeasy",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Transcribeasy",
+        "title": "TranscribEasy",
         "width": 1000,
         "height": 820,
         "resizable": true,
