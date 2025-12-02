@@ -1,4 +1,4 @@
-# Transcribeasy
+# TranscribEasy
 
 Transcribeasy is a local, offline speech-to-text desktop app built with Tauri (Rust) and a TypeScript/Vite frontend. It uses the Whisper ecosystem (via `whisper-rs` / `whisper.cpp`-style models) to transcribe audio and video files into plain-text transcripts and SRT subtitle files.
 
