@@ -83,30 +83,14 @@ cd transcribeasy
 npm install
 ```
 
-2. Run the frontend dev server (Vite):
-
-```bash
-npm run dev
+2. Run the app:
 ```
-
-3. In a second terminal, run the Tauri development environment (this builds and runs the native backend and webview):
-
-```bash
-npx tauri dev
-# or if you installed the CLI: npm run tauri -- dev
+npm run tauri dev
 ```
-
-The app window should open — use the UI to download a model, pick a media file, and start transcription.
 
 ## Build (production)
 
-1. Build the frontend assets and TypeScript:
-
-```bash
-npm run build
-```
-
-2. Build the Tauri app (native bundle):
+Build the Tauri app (native bundle):
 
 ```bash
 npx tauri build
