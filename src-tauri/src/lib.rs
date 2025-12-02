@@ -1,26 +1,7 @@
-use serde::Deserialize;
 // declare the module
 mod transcribe;
 // bring the function into scope (or call it with `transcribe::transcribe_file`)
 use crate::transcribe::transcribe_file;
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TranscriptionRequest {
-    file_path: String,
-    output_format: OutputFormat,
-    model: String,
-    max_segment_length: u32,
-    max_characters_per_segment: u32,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum OutputFormat {
-    Srt,
-    Txt,
-    Both,
-}
 
 #[tauri::command]
 fn transcribe_command(
