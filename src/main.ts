@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { DragDropEvent } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
+import { exists, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 
 type OutputFormat = "srt" | "txt" | "both";
@@ -17,6 +18,50 @@ interface TranscriptionRequest {
 
 const defaultStatusText = "Choose a file to begin.";
 let selectedFilePath: string | null = null;
+
+// Model keys used by the app (keeps in sync with settings page)
+const MODEL_KEYS = ["tiny", "base", "small", "medium", "large"] as const;
+
+// Populate the model select with only models that exist on disk.
+async function refreshModelSelect() {
+  const modelSelect = queryElement<HTMLSelectElement>('#model-select');
+  if (!modelSelect) return;
+
+  modelSelect.innerHTML = '';
+
+  for (const key of MODEL_KEYS) {
+    const filename = `models/${key}.bin`;
+    let existsOnDisk = false;
+    try {
+      existsOnDisk = await exists(filename, { baseDir: BaseDirectory.AppLocalData });
+    } catch (e) {
+      existsOnDisk = false;
+    }
+
+    if (existsOnDisk) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = key;
+      modelSelect.appendChild(opt);
+    }
+  }
+
+  // If no models found, show a disabled placeholder and disable start button
+  if (modelSelect.options.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No models downloaded';
+    opt.disabled = true;
+    modelSelect.appendChild(opt);
+
+    const startBtn = queryElement<HTMLButtonElement>('#start-btn');
+    if (startBtn) startBtn.disabled = true;
+  } else {
+    // If we have at least one model, ensure start button state follows file selection
+    const startBtn = queryElement<HTMLButtonElement>('#start-btn');
+    if (startBtn) startBtn.disabled = !selectedFilePath;
+  }
+}
 
 function isTauriEnvironment() {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -171,6 +216,9 @@ window.addEventListener("DOMContentLoaded", () => {
   if (statusEl) {
     statusEl.textContent = defaultStatusText;
   }
+
+  // Populate model select based on downloaded models on disk
+  void refreshModelSelect();
 
   // Update setSelectedFile to validate files
   function setSelectedFile(path: string | null) {
