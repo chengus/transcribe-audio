@@ -93,8 +93,7 @@ npm run tauri dev
 Build the Tauri app (native bundle):
 
 ```bash
-npx tauri build
-# or: npm run tauri -- build
+npm run tauri build -- --bundles app
 ```
 
 The OS-specific installers/bundles will be produced in the `src-tauri/target/` output directories.
