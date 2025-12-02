@@ -16,7 +16,7 @@ const STORAGE_KEY = 'app:modelStates:v2';
 
 // REPLACE THESE WITH YOUR REAL URLS
 const MODEL_URLS: Record<ModelKey, string> = {
-    tiny: 'https://huggingface.co/some-repo/tiny.bin',
+    tiny: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin',
     base: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin',
     small: 'https://huggingface.co/some-repo/small.bin',
     medium: 'https://huggingface.co/some-repo/medium.bin',
@@ -38,18 +38,34 @@ function loadStates(): Record<ModelKey, ModelState> {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return defaultState();
         const parsed = JSON.parse(raw);
-        
-        // Reset "downloading" to "not-downloaded" on refresh 
-        // because the stream is dead
-        Object.keys(parsed).forEach((k) => {
-             if (parsed[k].state === 'downloading') {
-                 parsed[k].state = 'not-downloaded';
-                 parsed[k].progress = 0;
-             }
-        });
+        // Just merge; do NOT mutate states here
         return { ...defaultState(), ...parsed };
     } catch (e) {
         return defaultState();
+    }
+}
+
+function recoverInterruptedDownloads() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const parsed: Record<ModelKey, ModelState> = JSON.parse(raw);
+        let changed = false;
+
+        (Object.keys(parsed) as ModelKey[]).forEach((k) => {
+            if (parsed[k].state === 'downloading') {
+                parsed[k].state = 'not-downloaded';
+                parsed[k].progress = 0;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+    } catch {
+        // ignore
     }
 }
 
@@ -74,64 +90,73 @@ function createActionButton(text: string, cls: string, handler: () => void) {
 
 function render() {
     const container = document.getElementById('models');
-    if (!container) return; // Guard clause in case HTML is missing
+    if (!container) return;
 
-    container.innerHTML = ''; // Clear current list
     const states = loadStates();
 
     MODEL_KEYS.forEach(key => {
-        const item = document.createElement('div');
-        item.className = 'model-item';
-
-        // Left side (Title + Status)
-        const left = document.createElement('div');
-        left.className = 'model-info';
+        // Try to find existing element for this model
+        let item = document.getElementById(`model-row-${key}`);
         
-        const title = document.createElement('div');
-        title.className = 'model-name';
-        title.textContent = key.charAt(0).toUpperCase() + key.slice(1); // Capitalize
-        
-        const status = document.createElement('div');
-        status.className = 'model-status';
-        if (states[key].state === 'not-downloaded') status.textContent = 'Not downloaded';
-        else if (states[key].state === 'downloading') status.textContent = `Downloading (${states[key].progress}%)`;
-        else status.textContent = 'Downloaded';
-
-        left.appendChild(title);
-        left.appendChild(status);
-
-        // Actions (Buttons)
-        const actions = document.createElement('div');
-        actions.className = 'model-actions';
-
-        if (states[key].state === 'not-downloaded') {
-            const dl = createActionButton('Download', 'ghost-btn', () => startDownload(key));
-            actions.appendChild(dl);
+        // 1. Create it if it doesn't exist
+        if (!item) {
+            item = document.createElement('div');
+            item.id = `model-row-${key}`; // Add ID for easy lookup
+            item.className = 'model-item';
+            
+            // Structure skeleton (empty initially)
+            item.innerHTML = `
+                <div class="model-info">
+                    <div class="model-name">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
+                    <div class="model-status" id="status-${key}"></div>
+                </div>
+                <div class="model-actions" id="actions-${key}"></div>
+                <div class="model-progress-wrap">
+                    <div class="model-progress" id="prog-${key}"></div>
+                </div>
+            `;
+            container.appendChild(item);
         }
 
-        if (states[key].state === 'downloading') {
-            const cancel = createActionButton('Cancel', 'ghost-btn', () => cancelDownload(key));
-            actions.appendChild(cancel);
+        // 2. Update specific elements (DOM Diffing)
+        const statusEl = document.getElementById(`status-${key}`);
+        const actionsEl = document.getElementById(`actions-${key}`);
+        const progEl = document.getElementById(`prog-${key}`);
+
+        // Update Status Text
+        if (statusEl) {
+            if (states[key].state === 'not-downloaded') statusEl.textContent = 'Not downloaded';
+            else if (states[key].state === 'downloading') statusEl.textContent = `Downloading (${states[key].progress}%)`;
+            else statusEl.textContent = 'Downloaded';
         }
 
-        if (states[key].state === 'downloaded') {
-            const del = createActionButton('Delete', 'ghost-btn', () => deleteDownload(key));
-            actions.appendChild(del);
+        // Update Progress Bar Width
+        if (progEl) {
+            progEl.style.width = `${states[key].progress}%`;
         }
 
-        // Progress Bar
-        const progWrap = document.createElement('div');
-        progWrap.className = 'model-progress-wrap';
-        const prog = document.createElement('div');
-        prog.className = 'model-progress';
-        prog.style.width = states[key].progress + '%';
-        progWrap.appendChild(prog);
+        // Update Buttons (Only recreate if state changed to prevent click loss)
+        if (actionsEl) {
+            // Check what button is currently there vs what we need
+            const currentBtnType = actionsEl.dataset.btnType;
+            const targetBtnType = states[key].state;
 
-        // Assemble
-        item.appendChild(left);
-        item.appendChild(actions);
-        item.appendChild(progWrap);
-        container.appendChild(item);
+            if (currentBtnType !== targetBtnType) {
+                actionsEl.innerHTML = ''; // Clear old buttons
+                actionsEl.dataset.btnType = targetBtnType; // Tag it
+
+                if (states[key].state === 'not-downloaded') {
+                    const dl = createActionButton('Download', 'ghost-btn', () => startDownload(key));
+                    actionsEl.appendChild(dl);
+                } else if (states[key].state === 'downloading') {
+                    const cancel = createActionButton('Cancel', 'ghost-btn', () => cancelDownload(key));
+                    actionsEl.appendChild(cancel);
+                } else if (states[key].state === 'downloaded') {
+                    const del = createActionButton('Delete', 'ghost-btn', () => deleteDownload(key));
+                    actionsEl.appendChild(del);
+                }
+            }
+        }
     });
 }
 
@@ -178,6 +203,7 @@ async function startDownload(key: ModelKey) {
         const fileHandle = await create(filename, { baseDir: BaseDirectory.AppLocalData });
         const reader = response.body.getReader();
         let receivedLength = 0;
+        let lastRenderTime = 0;
 
         while (true) {
             const { done, value } = await reader.read();
@@ -188,16 +214,29 @@ async function startDownload(key: ModelKey) {
             receivedLength += value.length;
             if (totalLength > 0) {
                 const percent = Math.round((receivedLength / totalLength) * 100);
+                
+                // Only update state if percent changed
                 if (percent !== states[key].progress) {
                     states[key].progress = percent;
-                    saveStates(states);
-                    render(); // Update UI
-                    if (percent % 10 === 0) {
-                        console.log(`Download progress for ${key}: ${percent}%`);
+                    // Don't save to localStorage on every % (too slow)
+                    // saveStates(states); 
+                    
+                    // Throttle UI updates to roughly 30fps
+                    const now = Date.now();
+                    if (now - lastRenderTime > 30) {
+                        saveStates(states); // Save occasionally
+                        render();
+                        lastRenderTime = now;
+                        console.log(`Download ${key}: ${percent}%`);
                     }
                 }
             }
         }
+        
+        // Ensure we end on 100%
+        states[key].progress = 100;
+        saveStates(states);
+        render();
 
         await fileHandle.close();
 
@@ -286,6 +325,7 @@ async function checkExistingFiles() {
 
 // This starts the whole process when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    recoverInterruptedDownloads();
     render(); // Initial draw
     checkExistingFiles(); // Verify disk state
 });
