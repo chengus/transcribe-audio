@@ -166,8 +166,7 @@ async function chooseFile(labelEl: HTMLElement | null, startBtn: HTMLButtonEleme
     multiple: false,
     directory: false,
     filters: [
-      { name: "Audio", extensions: ["mp3", "wav", "m4a", "flac", "aac", "ogg"] },
-      { name: "Video", extensions: ["mp4", "mov", "mkv"] },
+      { name: "Audio", extensions: ["wav"] },
     ],
   });
 
@@ -217,7 +216,7 @@ async function runTranscription(request: TranscriptionRequest, statusEl: HTMLEle
 }
 
 // Define allowed extensions
-const allowedExtensions = ["mp3", "wav", "m4a", "flac", "aac", "ogg", "mp4", "mov", "mkv"];
+const allowedExtensions = ["wav"];
 
 // Helper function to validate file extension
 function isValidFileExtension(filePath: string): boolean {
