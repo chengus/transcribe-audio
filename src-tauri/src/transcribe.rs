@@ -20,6 +20,14 @@ fn format_timestamp(cs: i64) -> String {
 }
 
 fn derive_output_paths(wav_path: &str, write_srt: bool, write_txt: bool) -> (Option<PathBuf>, Option<PathBuf>) {
+    /*
+    @Param wav_path: path to the input WAV file
+    @Param write_srt: whether to generate SRT file
+    @Param write_txt: whether to generate TXT file
+    @Returns: (Option<PathBuf> for SRT, Option<PathBuf> for TXT
+
+    The output files are placed in the same directory as the input WAV
+     */
     let p = Path::new(wav_path);
     let stem = p.file_stem().unwrap_or_default();
 
@@ -40,7 +48,7 @@ fn derive_output_paths(wav_path: &str, write_srt: bool, write_txt: bool) -> (Opt
     (srt, txt)
 }
 
-pub fn transcribe_file(
+pub fn transcribe_file2(
     model_path: &str,
     wav_path: &str,
     output_format: &str,
@@ -65,7 +73,7 @@ pub fn transcribe_file(
 ///
 /// Returns the full plain-text transcript as a String (for UI),
 /// and writes SRT/TXT files next to `wav_path` when requested.
-pub fn transcribe_file2(
+pub fn transcribe_file(
     model_path: &str,
     wav_path: &str,
     output_format: &str,
@@ -103,7 +111,7 @@ pub fn transcribe_file2(
     });
     params.set_language(Some("en"));
     params.set_print_special(false);
-    params.set_print_progress(false);
+    params.set_print_progress(true);
     params.set_print_realtime(false);
     params.set_print_timestamps(false);
 

@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { DragDropEvent } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
+import { appLocalDataDir, join } from '@tauri-apps/api/path';
 import { exists, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 
@@ -137,6 +138,29 @@ function getOutputFormat() {
   return (radio?.value as OutputFormat) ?? "srt";
 }
 
+// Resolve a model selection into a real filesystem path. If the value
+// already looks like an absolute path, return it as-is. Otherwise
+// return the app-local-data `models/<key>.bin` path.
+async function resolveModelPath(selection: string | undefined | null) {
+  if (!selection) return '';
+
+  // Quick heuristic: if selection contains a path separator or a drive letter,
+  // assume it's already a full path.
+  if (selection.includes('/') || selection.includes('\\') || /^[A-Za-z]:\\/.test(selection)) {
+    return selection;
+  }
+
+  try {
+    const dir = await appLocalDataDir();
+    // join returns a Promise<string>
+    const full = await join(dir, 'models', `${selection}.bin`);
+    return full;
+  } catch (e) {
+    console.warn('Failed to resolve model path, falling back to selection string', e);
+    return selection;
+  }
+}
+
 async function chooseFile(labelEl: HTMLElement | null, startBtn: HTMLButtonElement | null) {
   const selection = await open({
     multiple: false,
@@ -184,8 +208,7 @@ async function runTranscription(request: TranscriptionRequest, statusEl: HTMLEle
 
     if (statusEl) {
       statusEl.textContent = [
-        "Parameters sent to backend (check Rust console):",
-        JSON.stringify(request, null, 2),
+        "Transcription completed!",
       ].join("\n");
     }
   } catch (e) {
@@ -312,10 +335,26 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (!modelSelect || !modelSelect.value) {
+      if (statusEl) statusEl.textContent = 'No model selected.';
+      return;
+    }
+
+    const baseDir = await appLocalDataDir();
+    const fullPath = await join(baseDir, 'models', `${modelSelect.value}.bin`);
+
+    // Verify file exists before invoking backend
+    const modelExists = await exists(fullPath, { baseDir: BaseDirectory.AppLocalData }).catch(() => false);
+    if (!modelExists) {
+      if (statusEl) statusEl.textContent = `Model file not found: ${fullPath}`;
+      return;
+    }
+
     const request: TranscriptionRequest = {
       filePath: selectedFilePath,
       outputFormat: getOutputFormat(),
-      model: modelSelect?.value ?? "base",
+      // pass resolved full model path to the backend
+      model: fullPath,
       maxSegmentLength: parsePositiveInt(maxSegmentInput, 8),
       maxCharactersPerSegment: parsePositiveInt(maxCharInput, 80),
     };
@@ -325,6 +364,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // UI feedback: all params validated, starting transcription
+      if (statusEl) {
+        statusEl.textContent = `Starting transcription — model: ${modelSelect?.value}, file: ${selectedFilePath}`;
+      }
+
       await runTranscription(request, statusEl);
     } catch (error) {
       console.error("Failed to reach backend:", error);
