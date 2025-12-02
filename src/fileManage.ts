@@ -45,18 +45,32 @@ function loadStates(): Record<ModelKey, ModelState> {
     }
 }
 
-function recoverInterruptedDownloads() {
+function normalizeStatesOnStartup() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
 
-        const parsed: Record<ModelKey, ModelState> = JSON.parse(raw);
+        const parsed = JSON.parse(raw) as Record<ModelKey, ModelState>;
         let changed = false;
 
-        (Object.keys(parsed) as ModelKey[]).forEach((k) => {
-            if (parsed[k].state === 'downloading') {
-                parsed[k].state = 'not-downloaded';
-                parsed[k].progress = 0;
+        MODEL_KEYS.forEach((key) => {
+            const st = parsed[key];
+
+            // If we don't have anything, skip
+            if (!st) return;
+
+            // Any interrupted download or weird state -> reset to "not-downloaded", 0%
+            if (st.state === 'downloading' || st.state === 'not-downloaded') {
+                if (st.progress !== 0 || st.state === 'downloading') {
+                    parsed[key] = { state: 'not-downloaded', progress: 0 };
+                    changed = true;
+                }
+            }
+
+            // Optional: if you *ever* saved a downloaded model with progress != 100,
+            // you can normalize that too:
+            if (st.state === 'downloaded' && st.progress !== 100) {
+                parsed[key].progress = 100;
                 changed = true;
             }
         });
@@ -68,6 +82,7 @@ function recoverInterruptedDownloads() {
         // ignore
     }
 }
+
 
 function saveStates(states: Record<ModelKey, ModelState>) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(states));
@@ -206,6 +221,10 @@ async function startDownload(key: ModelKey) {
         let lastRenderTime = 0;
 
         while (true) {
+            const latest = loadStates();
+            if (latest[key].state !== 'downloading') {
+                break;
+            }
             const { done, value } = await reader.read();
             if (done) break;
 
@@ -232,6 +251,10 @@ async function startDownload(key: ModelKey) {
                 }
             }
         }
+
+        const finalStates = loadStates();
+        if (finalStates[key].state !== 'downloading') return;
+
         
         // Ensure we end on 100%
         states[key].progress = 100;
@@ -267,11 +290,14 @@ async function cancelDownload(key: ModelKey) {
         abortControllers[key].abort();
         delete abortControllers[key];
     }
-    
-    // Cleanup UI state
+
+    // Force-reset state for this key
     const states = loadStates();
-    states[key].state = 'not-downloaded';
-    states[key].progress = 0;
+    states[key] = {
+        state: 'not-downloaded',
+        progress: 0,
+    };
+    
     saveStates(states);
     render();
 
@@ -325,7 +351,7 @@ async function checkExistingFiles() {
 
 // This starts the whole process when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    recoverInterruptedDownloads();
+    normalizeStatesOnStartup();
     render(); // Initial draw
     checkExistingFiles(); // Verify disk state
 });
