@@ -6,6 +6,24 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "dialog:default"
+    "dialog:default",
+    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://huggingface.co/*" }] 
+    },
+    "fs:default",
+    {
+      "identifier": "fs:allow-create",
+      "allow": [{ "path": "$APPDATA/*" }]
+    },
+    {
+      "identifier": "fs:allow-app-write-recursive",
+      "allow": [{ "path": "$APPDATA/*" }]
+    },
+    {
+      "identifier": "fs:allow-app-read-recursive",
+      "allow": [{ "path": "$APPDATA/*" }]
+    }
   ]
 }

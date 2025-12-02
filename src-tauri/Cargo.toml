@@ -25,4 +25,7 @@ serde_json = "1"
 tauri-plugin-dialog = "2"
 whisper-rs = { version = "0.15", features = ["metal"] } # or cuda/vulkan/etc
 hound = "3"
+tauri-plugin-http = "2"
+tauri-plugin-shell = "2.3.3"
+tauri-plugin-fs = "2.4.4"
 
