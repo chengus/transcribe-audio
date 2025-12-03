@@ -18,9 +18,9 @@ const STORAGE_KEY = 'app:modelStates:v2';
 const MODEL_URLS: Record<ModelKey, string> = {
     tiny: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin',
     base: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin',
-    small: 'https://huggingface.co/some-repo/small.bin',
-    medium: 'https://huggingface.co/some-repo/medium.bin',
-    large: 'https://huggingface.co/some-repo/large.bin',
+    small: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin',
+    medium: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin',
+    large: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin',
 };
 
 const abortControllers: Record<string, AbortController> = {};
