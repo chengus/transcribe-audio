@@ -32,8 +32,7 @@ This repository provides a simple GUI for downloading models, selecting audio/vi
 
 ## Supported formats
 
-- Common audio: `mp3`, `wav`, `m4a`, `flac`, `aac`, `ogg`.
-- Common video: `mp4`, `mov`, `mkv`.
+- Audio: `wav`
 
 Output: `.srt` and/or `.txt` files are written next to the input file (same directory, same base name).
 
